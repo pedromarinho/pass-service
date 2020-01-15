@@ -7,7 +7,7 @@ import BaseRouter from './routes/index'
 const port = process.env.PORT || 3000;
 
 // create and setup express app
-createConnection().then(async connection => {
+createConnection().then(async () => {
     const app = express();
 
     app.use(bodyParser.json());

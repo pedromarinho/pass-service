@@ -1,53 +1,28 @@
-import {Request, Response} from "express";
-import {getManager} from "typeorm";
-import {Pass} from "../entity/Pass";
-import {Registration} from "../entity/Registration";
-import {extractToken} from "../util/auth"
+import { Request, Response } from "express";
+import { Template } from "@walletpass/pass-js";
+import fs from "fs-extra";
 
-let passRepository = () => getManager().getRepository(Pass);
-let registrationRepository = () => getManager().getRepository(Registration);
+const KEY_FILE = 'keys/key.pem'
+const KEY_PASS = '123456';
+const PASSES_FOLDER = 'passes';
+const PASS_EXT = '.pkpass';
+const PASS_TEMPLATE = 'passTemplate/Event.pass'
 
-/**
- * Register a device.
- */
-export async function postRegisterDevice(request: Request, response: Response) {
-    const pass = await passRepository().findOne({ serialNumber: request.params.serialNumber, authenticationToken: extractToken(request) });
-    if (pass) {
-        const reg = await registrationRepository().findOne({ deviceId: request.params.deviceId, serialNumber: request.params.serialNumber });
-        if (reg) {
-            response.sendStatus(200);
-        } else {
-            const registration = new Registration();
-            registration.deviceId = request.params.deviceId;
-            registration.passTypeId = request.params.passTypeId;
-            registration.pushToken = request.body.pushToken;
-            registration.serialNumber = request.params.serialNumber;
-            await registrationRepository().manager.save(registration);
-            response.sendStatus(201);
-        }
-    } else {
-        response.sendStatus(401);
-    }
-}
+export async function createPass(request: Request, response: Response) {
+    const template = await Template.load(PASS_TEMPLATE);
 
-export function getUpdatablePasses(request: Request, response: Response) {
-    // not implemented
-}
+    await template.loadCertificate(
+        KEY_FILE,
+        KEY_PASS
+    );
 
-/**
- * Unregister a device.
- */
-export async function unregisterDevice(request: Request, response: Response) {
-    const pass = await passRepository().findOne({ serialNumber: request.params.serialNumber, authenticationToken: extractToken(request) });
-    if (pass) {
-        const reg = await registrationRepository().findOne({ deviceId: request.params.deviceId, serialNumber: request.params.serialNumber });
-        if (reg) {
-            await registrationRepository().delete(reg);
-            response.sendStatus(200);
-        } else {
-            response.sendStatus(201);
-        }
-    } else {
-        response.sendStatus(401);
-    }
+    template.passTypeIdentifier = "pass.com.pedro.example";
+    template.teamIdentifier = "1214134214132";
+
+    const pass = template.createPass();
+
+    const buf = await pass.asBuffer();
+    await fs.writeFile(`${PASSES_FOLDER}/${template.passTypeIdentifier}_${template.serialNumber}${PASS_EXT}`, buf);
+
+    response.sendStatus(201);
 }

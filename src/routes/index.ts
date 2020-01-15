@@ -1,12 +1,11 @@
 import { Request, Response, Router } from 'express';
-import { postRegisterDevice, getUpdatablePasses, unregisterDevice } from '../controller/passController';
+import { postRegisterDevice, getUpdatablePasses, unregisterDevice } from '../controller/passKitServerController';
+import { createPass } from '../controller/passController';
 
 let router = Router();
 
-/* GET home page. */
-router.get('/', (req: Request, res: Response) => {
-  res.send('welcome to api');
-});
+/* create a new pass */
+router.post('/create', createPass);
 
 // Registering a Device to Receive Push Notifications for a Pass
 router.post('/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber', postRegisterDevice);
@@ -20,7 +19,7 @@ router.get('/v1/devices/:deviceId/registrations/:passTypeId', getUpdatablePasses
 router.get('/v1/passes/:passTypeId/:serialNumber', (req: Request, res: Response) => {
   console.log("#### GETTING PASS FILE ####")
   res.setHeader("Content-Type", "application/vnd.apple.pkpass");
-  res.sendFile("pass-package/Lollipop.pkpass", { root : "./"})
+  res.sendFile("pass-package/pathToPass.pkpass", { root : "./"})
 });
 
 
