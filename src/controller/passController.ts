@@ -12,7 +12,9 @@ const registrationRepository = () => getManager().getRepository(Registration);
 
 export async function createPass(request: Request, response: Response) {
     try {
-        const template = await Template.load(Constants.PASS_TEMPLATE);
+        const template = await Template.load(Constants.PASS_TEMPLATE, '', {
+            allowHttp: true
+        });
 
         await template.loadCertificate(
             Constants.KEY_FILE,
@@ -31,26 +33,35 @@ export async function createPass(request: Request, response: Response) {
             passTypeId: request.params.passTypeId,
             serialNumber: request.params.serialNumber
         });
-
+        
         if (passEntity) {
-            passEntity.updatedAt = new Date();
-
             const pushTokens = await getDevicePushTokens(passEntity);
-            sendPush(pushTokens, passEntity.passTypeId);
+            pushTokens && sendPush(pushTokens, passEntity.passTypeId);
         } else {
             passEntity = new Pass();
             passEntity.passTypeId = pass.passTypeIdentifier || '';
             passEntity.serialNumber = pass.serialNumber || '';
             passEntity.authenticationToken = pass.authenticationToken || '';
         }
+        passEntity.updatedAt = new Date();
 
         await passRepository().manager.save(passEntity);
 
-        response.sendStatus(201);
+        response.status(201).send({ passTypeIdentifier: passEntity.passTypeId, serialNumber: passEntity.serialNumber });
     } catch (error) {
         response.status(403).send({ err: error });
     }
 
+}
+
+export async function getPass(request: Request, response: Response) {
+    console.log("####### GET PASS FILE #######")
+    try {
+        response.setHeader("Content-Type", Constants.PKPASS_CONTENT_TYPE);
+        response.sendFile(`${Constants.PASSES_FOLDER}/${request.params.passTypeId}_${request.params.serialNumber}${Constants.PASS_EXT}`, { root : "./"})
+    } catch (error) {
+        response.status(403).send({ err: error });
+    }
 }
 
 async function getDevicePushTokens(pass: Pass) {

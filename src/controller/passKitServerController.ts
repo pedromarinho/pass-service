@@ -12,6 +12,7 @@ const registrationRepository = () => getManager().getRepository(Registration);
     Authorization tokens are specified by each pass
  */
 export async function postRegisterDevice(request: Request, response: Response) {
+    console.log("####### REGISTERING DEVICE #######")
     const pass = await passRepository().findOne({
         passTypeId: request.params.passTypeId,
         serialNumber: request.params.serialNumber,
@@ -36,14 +37,24 @@ export async function postRegisterDevice(request: Request, response: Response) {
     }
 }
 
-export function getUpdatablePasses(request: Request, response: Response) {
-    // not implemented
+/**
+ *  Handling updates request
+ */
+export async function getUpdatablePasses(request: Request, response: Response) {
+    console.log("####### GET UPDATABLE PASSES #######")
+    const passes = await passRepository().find({ where: { passTypeId: request.params.passTypeId }, relations: ["registrations"] });
+    if (passes) {
+        response.status(200).send({ lastUpdated: passes[0].updatedAt, serialNumbers: passes.map(pass => pass.serialNumber) });
+    } else {
+        response.sendStatus(401);
+    }
 }
 
 /**
  *  Unregistering a device to receive push notifications for a pass
  */
 export async function unregisterDevice(request: Request, response: Response) {
+    console.log("####### UNREGISTERING DEVICE #######")
     const pass = await passRepository().findOne({
         passTypeId: request.params.passTypeId,
         serialNumber: request.params.serialNumber,

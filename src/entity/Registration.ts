@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
 import { Pass } from './Pass';
 
 @Entity()
@@ -13,8 +13,7 @@ export class Registration {
     @Column()
     pushToken: string;
 
-    @OneToOne(type => Pass)
-    @JoinColumn()
+    @ManyToOne(type => Pass, pass => pass.registrations)
     pass: Pass;
 
 }

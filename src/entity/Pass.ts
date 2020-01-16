@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, Unique, OneToMany } from "typeorm";
+import { Registration } from './Registration';
 
 @Entity()
 @Unique(["passTypeId", "serialNumber"])
@@ -18,5 +19,8 @@ export class Pass {
 
     @Column()
     updatedAt: Date;
+
+    @OneToMany(type => Registration, registration => registration.pass)
+    registrations: Registration[];
 
 }
