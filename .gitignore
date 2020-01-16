@@ -6,3 +6,5 @@ npm-debug.log
 .DS_Store
 signpass
 database.sqlite
+passes
+keys

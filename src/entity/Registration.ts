@@ -1,4 +1,5 @@
-import {Entity, PrimaryGeneratedColumn, Column} from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from "typeorm";
+import { Pass } from './Pass';
 
 @Entity()
 export class Registration {
@@ -10,12 +11,10 @@ export class Registration {
     deviceId: string;
 
     @Column()
-    passTypeId: string;
-
-    @Column()
     pushToken: string;
 
-    @Column()
-    serialNumber: string;
+    @OneToOne(type => Pass)
+    @JoinColumn()
+    pass: Pass;
 
 }
