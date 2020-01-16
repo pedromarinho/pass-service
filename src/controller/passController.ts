@@ -3,43 +3,57 @@ import { Template } from "@walletpass/pass-js";
 import fs from "fs-extra";
 import { getManager } from "typeorm";
 import { Pass } from "../entity/Pass";
-
-const KEY_FILE = 'keys/key.pem'
-const KEY_PASS = '123456';
-const PASSES_FOLDER = 'passes';
-const PASS_EXT = '.pkpass';
-const PASS_TEMPLATE = 'passTemplate/Event.pass'
+import { sendPush } from "../service/pushService"
+import { Registration } from '../entity/Registration';
+import { Constants } from '../constants';
 
 const passRepository = () => getManager().getRepository(Pass);
+const registrationRepository = () => getManager().getRepository(Registration);
 
 export async function createPass(request: Request, response: Response) {
     try {
-        const template = await Template.load(PASS_TEMPLATE);
+        const template = await Template.load(Constants.PASS_TEMPLATE);
 
         await template.loadCertificate(
-            KEY_FILE,
-            KEY_PASS
+            Constants.KEY_FILE,
+            Constants.KEY_PASS
         );
-    
+
         template.passTypeIdentifier = "pass.com.pedro.example";
         template.teamIdentifier = "1214134214132";
-    
+
         const pass = template.createPass();
-    
+
         const buf = await pass.asBuffer();
-        await fs.writeFile(`${PASSES_FOLDER}/${template.passTypeIdentifier}_${template.serialNumber}${PASS_EXT}`, buf);
-    
-        const passEntity = new Pass();
-    
-        passEntity.passTypeId = pass.passTypeIdentifier || '';
-        passEntity.serialNumber = pass.serialNumber || '';
-        passEntity.authenticationToken = pass.authenticationToken || '';
-    
-        await passRepository().save(passEntity);
+        await fs.writeFile(`${Constants.PASSES_FOLDER}/${template.passTypeIdentifier}_${template.serialNumber}${Constants.PASS_EXT}`, buf);
+
+        let passEntity = await passRepository().findOne({
+            passTypeId: request.params.passTypeId,
+            serialNumber: request.params.serialNumber
+        });
+
+        if (passEntity) {
+            passEntity.updatedAt = new Date();
+
+            const pushTokens = await getDevicePushTokens(passEntity);
+            sendPush(pushTokens, passEntity.passTypeId);
+        } else {
+            passEntity = new Pass();
+            passEntity.passTypeId = pass.passTypeIdentifier || '';
+            passEntity.serialNumber = pass.serialNumber || '';
+            passEntity.authenticationToken = pass.authenticationToken || '';
+        }
+
+        await passRepository().manager.save(passEntity);
 
         response.sendStatus(201);
     } catch (error) {
-        response.status(403).send({err: error});
+        response.status(403).send({ err: error });
     }
-    
+
+}
+
+async function getDevicePushTokens(pass: Pass) {
+    let registrations = await registrationRepository().find({ where: { pass: pass }, select: ['pushToken'] });
+    return registrations.map(registration => registration.pushToken);
 }

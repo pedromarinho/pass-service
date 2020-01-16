@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, Unique, UpdateDateColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, Unique } from "typeorm";
 
 @Entity()
 @Unique(["passTypeId", "serialNumber"])
@@ -16,7 +16,7 @@ export class Pass {
     @Column()
     authenticationToken: string
 
-    @UpdateDateColumn()
-    updatedAt: number;
+    @Column()
+    updatedAt: Date;
 
 }

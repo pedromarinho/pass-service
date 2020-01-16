@@ -5,7 +5,10 @@ import { createPass } from '../controller/passController';
 let router = Router();
 
 /* create a new pass */
-router.post('/create', createPass);
+router.post('/pass', createPass);
+
+/* update a pass */
+router.put('/pass/:passTypeId/:serialNumber', createPass);
 
 // Registering a Device to Receive Push Notifications for a Pass
 router.post('/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber', postRegisterDevice);
