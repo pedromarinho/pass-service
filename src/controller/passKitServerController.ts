@@ -4,26 +4,31 @@ import { Pass } from "../entity/Pass";
 import { Registration } from "../entity/Registration";
 import { extractToken } from "../util/auth"
 
-let passRepository = () => getManager().getRepository(Pass);
-let registrationRepository = () => getManager().getRepository(Registration);
+const passRepository = () => getManager().getRepository(Pass);
+const registrationRepository = () => getManager().getRepository(Registration);
 
 /**
- *  Register a device.
+ *  Registering a device to receive push notifications for a pass
     Authorization tokens are specified by each pass
  */
 export async function postRegisterDevice(request: Request, response: Response) {
-    const pass = await passRepository().findOne({ serialNumber: request.params.serialNumber, authenticationToken: extractToken(request) });
+    const pass = await passRepository().findOne({
+        passTypeId: request.params.passTypeId,
+        serialNumber: request.params.serialNumber,
+        authenticationToken: extractToken(request)
+    });
     if (pass) {
-        const reg = await registrationRepository().findOne({ deviceId: request.params.deviceId, serialNumber: request.params.serialNumber });
-        if (reg) {
+        let registration = await registrationRepository().findOne(
+            { deviceId: request.params.deviceId, pass: pass }
+        );
+        if (registration) {
             response.sendStatus(200);
         } else {
-            const registration = new Registration();
+            registration = new Registration();
             registration.deviceId = request.params.deviceId;
-            registration.passTypeId = request.params.passTypeId;
             registration.pushToken = request.body.pushToken;
-            registration.serialNumber = request.params.serialNumber;
-            await registrationRepository().manager.save(registration);
+            registration.pass = pass;
+            await registrationRepository().save(registration);
             response.sendStatus(201);
         }
     } else {
@@ -36,17 +41,23 @@ export function getUpdatablePasses(request: Request, response: Response) {
 }
 
 /**
- * Unregister a device.
+ *  Unregistering a device to receive push notifications for a pass
  */
 export async function unregisterDevice(request: Request, response: Response) {
-    const pass = await passRepository().findOne({ serialNumber: request.params.serialNumber, authenticationToken: extractToken(request) });
+    const pass = await passRepository().findOne({
+        passTypeId: request.params.passTypeId,
+        serialNumber: request.params.serialNumber,
+        authenticationToken: extractToken(request)
+    });
     if (pass) {
-        const reg = await registrationRepository().findOne({ deviceId: request.params.deviceId, serialNumber: request.params.serialNumber });
-        if (reg) {
-            await registrationRepository().delete(reg);
+        let registration = await registrationRepository().findOne(
+            { deviceId: request.params.deviceId, pass: pass }
+        );
+        if (registration) {
+            await registrationRepository().delete(registration);
             response.sendStatus(200);
         } else {
-            response.sendStatus(201);
+            response.sendStatus(401);
         }
     } else {
         response.sendStatus(401);
