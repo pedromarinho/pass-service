@@ -3,6 +3,7 @@ import { getManager } from "typeorm";
 import { Pass } from "../entity/Pass";
 import { Registration } from "../entity/Registration";
 import { extractToken } from "../util/auth"
+import { getMaxDateFromArray } from '../util/date';
 
 const passRepository = () => getManager().getRepository(Pass);
 const registrationRepository = () => getManager().getRepository(Registration);
@@ -42,11 +43,26 @@ export async function postRegisterDevice(request: Request, response: Response) {
  */
 export async function getUpdatablePasses(request: Request, response: Response) {
     console.log("####### GET UPDATABLE PASSES #######")
-    const passes = await passRepository().find({ where: { passTypeId: request.params.passTypeId }, relations: ["registrations"] });
-    if (passes) {
-        response.status(200).send({ lastUpdated: passes[0].updatedAt, serialNumbers: passes.map(pass => pass.serialNumber) });
+
+    let passes = await passRepository().createQueryBuilder("pass")
+        .innerJoinAndSelect("pass.registrations", "registration")
+        .where("pass.passTypeId = :passTypeId", { passTypeId: request.params.passTypeId })
+        .andWhere("registration.deviceId = :deviceId", { deviceId: request.params.deviceId })
+        .getMany()
+    
+    const passesUpdatedSince = request.query.passesUpdatedSince;
+
+    if (passesUpdatedSince) {
+        passes = passes.filter(pass => pass.updatedAt > new Date(passesUpdatedSince));
+    }
+    
+    if (passes.length > 0) {
+        const lastPassUpdated: Date = getMaxDateFromArray(passes.map(pass => pass.updatedAt));
+        const serialNumbers = passes.map(pass => pass.serialNumber);
+
+        response.status(200).send({ lastUpdated: lastPassUpdated, serialNumbers: serialNumbers });
     } else {
-        response.sendStatus(401);
+        response.sendStatus(204);
     }
 }
 
@@ -61,7 +77,7 @@ export async function unregisterDevice(request: Request, response: Response) {
         authenticationToken: extractToken(request)
     });
     if (pass) {
-        let registration = await registrationRepository().findOne(
+        const registration = await registrationRepository().findOne(
             { deviceId: request.params.deviceId, pass: pass }
         );
         if (registration) {
