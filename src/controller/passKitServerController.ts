@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { getManager } from "typeorm";
 import { Pass } from "../entity/Pass";
 import { Registration } from "../entity/Registration";
-import { extractToken } from "../util/auth"
 import { getMaxDateFromArray } from '../util/date';
 
 const passRepository = () => getManager().getRepository(Pass);
@@ -13,11 +12,9 @@ const registrationRepository = () => getManager().getRepository(Registration);
     Authorization tokens are specified by each pass
  */
 export async function postRegisterDevice(request: Request, response: Response) {
-    console.log("####### REGISTERING DEVICE #######")
     const pass = await passRepository().findOne({
         passTypeId: request.params.passTypeId,
-        serialNumber: request.params.serialNumber,
-        authenticationToken: extractToken(request)
+        serialNumber: request.params.serialNumber
     });
     if (pass) {
         let registration = await registrationRepository().findOne(
@@ -42,8 +39,6 @@ export async function postRegisterDevice(request: Request, response: Response) {
  *  Handling updates request
  */
 export async function getUpdatablePasses(request: Request, response: Response) {
-    console.log("####### GET UPDATABLE PASSES #######")
-
     let passes = await passRepository().createQueryBuilder("pass")
         .innerJoinAndSelect("pass.registrations", "registration")
         .where("pass.passTypeId = :passTypeId", { passTypeId: request.params.passTypeId })
@@ -70,11 +65,9 @@ export async function getUpdatablePasses(request: Request, response: Response) {
  *  Unregistering a device to receive push notifications for a pass
  */
 export async function unregisterDevice(request: Request, response: Response) {
-    console.log("####### UNREGISTERING DEVICE #######")
     const pass = await passRepository().findOne({
         passTypeId: request.params.passTypeId,
-        serialNumber: request.params.serialNumber,
-        authenticationToken: extractToken(request)
+        serialNumber: request.params.serialNumber
     });
     if (pass) {
         const registration = await registrationRepository().findOne(

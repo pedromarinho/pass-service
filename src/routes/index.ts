@@ -11,6 +11,9 @@ router.post('/pass', createPass);
 /* update a pass */
 router.put('/pass/:passTypeId/:serialNumber', createPass);
 
+
+// Passkit Web Server implementation
+
 /**
  *  Registering a device to receive push notifications for a pass
  */
@@ -31,10 +34,11 @@ router.get('/v1/passes/:passTypeId/:serialNumber', getPass);
  */
 router.delete('/v1/devices/:deviceId/registrations/:passTypeId/:serialNumber', unregisterDevice);
 
-
-// Logging Errors
+/**
+ *  Show logs
+ */
 router.post('/v1/log', (req: Request, res: Response) => {
-  res.send(req.params);
+  console.log(req.body)
 });
 
 

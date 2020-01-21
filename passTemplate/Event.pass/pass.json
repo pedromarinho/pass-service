@@ -16,11 +16,13 @@
       "latitude" : 37.33182
     }
   ],
-  "barcode" : {
-    "message" : "123456789",
-    "format" : "PKBarcodeFormatPDF417",
-    "messageEncoding" : "iso-8859-1"
-  },
+  "barcodes" : [
+    {
+      "message" : "123456789",
+      "format" : "PKBarcodeFormatQR",
+      "messageEncoding" : "iso-8859-1"
+    }
+  ],
   "organizationName" : "Apple Inc.",
   "description" : "Apple Event Ticket",
   "foregroundColor" : "rgb(255, 255, 255)",

@@ -21,9 +21,6 @@ export async function createPass(request: Request, response: Response) {
             Constants.KEY_PASS
         );
 
-        template.passTypeIdentifier = "pass.com.pedro.example";
-        template.teamIdentifier = "1214134214132";
-
         const pass = template.createPass();
 
         const buf = await pass.asBuffer();
@@ -33,7 +30,7 @@ export async function createPass(request: Request, response: Response) {
             passTypeId: request.params.passTypeId,
             serialNumber: request.params.serialNumber
         });
-        
+
         if (passEntity) {
             const pushTokens = await getDevicePushTokens(passEntity);
             pushTokens && sendPush(pushTokens, passEntity.passTypeId);
@@ -41,7 +38,6 @@ export async function createPass(request: Request, response: Response) {
             passEntity = new Pass();
             passEntity.passTypeId = pass.passTypeIdentifier || '';
             passEntity.serialNumber = pass.serialNumber || '';
-            passEntity.authenticationToken = pass.authenticationToken || '';
         }
         passEntity.updatedAt = new Date();
 
@@ -55,15 +51,17 @@ export async function createPass(request: Request, response: Response) {
 }
 
 export async function getPass(request: Request, response: Response) {
-    console.log("####### GET PASS FILE #######")
     try {
         response.setHeader("Content-Type", Constants.PKPASS_CONTENT_TYPE);
-        response.sendFile(`${Constants.PASSES_FOLDER}/${request.params.passTypeId}_${request.params.serialNumber}${Constants.PASS_EXT}`, { root : "./"})
+        response.sendFile(`${Constants.PASSES_FOLDER}/${request.params.passTypeId}_${request.params.serialNumber}${Constants.PASS_EXT}`, { root: "./" })
     } catch (error) {
         response.status(403).send({ err: error });
     }
 }
 
+/**
+ *  Get push tokens registered on the pass
+ */
 async function getDevicePushTokens(pass: Pass) {
     let registrations = await registrationRepository().find({ where: { pass: pass }, select: ['pushToken'] });
     return registrations.map(registration => registration.pushToken);

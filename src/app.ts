@@ -2,7 +2,9 @@ import "reflect-metadata";
 import {createConnection} from "typeorm";
 import express from 'express';
 import bodyParser from "body-parser";
-import BaseRouter from './routes/index'
+import BaseRouter from './routes/index';
+import fs from 'fs';
+import { Constants } from './constants';
 
 const port = process.env.PORT || 3000;
 
@@ -19,3 +21,7 @@ createConnection().then(async () => {
         console.log(`[SERVER] Running at http://localhost:${port}`);
     });
 }).catch(error => console.log("TypeORM connection error: ", error));
+
+if (!fs.existsSync(Constants.PASSES_FOLDER)) {
+    fs.mkdirSync(Constants.PASSES_FOLDER)
+}
