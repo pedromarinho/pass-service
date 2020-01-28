@@ -19,46 +19,40 @@ $ npm install
 $ npm run start
 ```
 
-
-
 ## Creating a pass
 ```
-POST http://localhost:3000/pass/
+POST http://SERVER_URL:PORT/pass/
 ```
-- On the device, access the url: http://localhost:3000/v1/passes/:passTypeId/:serialNumber passing the pass type id and serial number.
+- Set your test device to use http (in Settings->Developer)
+- On the device, access the url: http://SERVER_URL:PORT/v1/passes/:passTypeId/:serialNumber passing the pass type id and serial number.
 - Install the pass in the Apple Wallet.
 
 ## Updating a pass
-- Make changes to the template.
-```
-PUT http://localhost:3000/pass/<passTypeId>/<serialNumber>
-```
-- A push notification will be sent to the registered device and the pass will be updated automatically.
-
-
+- Make changes to the pass template.
+- Send a request PUT http://SERVER_URL:PORT/pass/:passTypeId/:serialNumber passing the pass type id and serial number. A push notification will be sent to the registered device and the pass will be updated automatically.
 
 ---
 
 ## Passkit Web Service
 The complete specification can
-be found in the [Passbook Web Service Reference](https://developer.apple.com/library/prerelease/ios/#documentation/PassKit/Reference/PassKit_WebService/WebService.html).
+be found in the [PassKit Web Service Reference](https://developer.apple.com/library/prerelease/ios/#documentation/PassKit/Reference/PassKit_WebService/WebService.html).
 
 ### Registering a Device to Receive Push Notifications for a Pass
 ```
-POST http://localhost:3000/v1/devices/<deviceId>/registrations/<passTypeId>/<serialNumber>
+POST http://SERVER_URL:PORT/v1/devices/<deviceId>/registrations/<passTypeId>/<serialNumber>
 ```
 
 ### Getting the Serial Numbers for Passes Associated with a Device
 ```
-GET http://localhost:3000/v1/devices/<deviceId>/registrations/<passTypeId>?passesUpdatedSince
+GET http://SERVER_URL:PORT/v1/devices/<deviceId>/registrations/<passTypeId>?passesUpdatedSince
 ```
 
 ### Getting the Latest Version of a Pass
 ```
-GET http://localhost:3000/v1/passes/<passTypeId>/<serialNumber>
+GET http://SERVER_URL:PORT/v1/passes/<passTypeId>/<serialNumber>
 ```
 
 ### Unregistering a Device
 ```
-DELETE http://localhost:3000/v1/devices/<deviceId>/registrations/<passTypeId>/<serialNumber>
+DELETE http://SERVER_URL:PORT/v1/devices/<deviceId>/registrations/<passTypeId>/<serialNumber>
 ```
