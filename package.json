@@ -15,7 +15,7 @@
       "fs-extra": "^8.1.0",
       "reflect-metadata": "^0.1.10",
       "sqlite3": "^4.1.1",
-      "typeorm": "^0.2.22"
+      "typeorm": "^0.2.25"
    },
    "devDependencies": {
       "@types/body-parser": "^1.17.1",
